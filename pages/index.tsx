@@ -1,14 +1,12 @@
-// app/page.tsx
-'use client'
+'use client';
 import { useState } from "react";
 import type { NextPage } from "next";
 import { useWallet } from '@meshsdk/react';
 import { CardanoWallet } from '@meshsdk/react';
-import { AssetExtended } from '@meshsdk/core';
 
 const Home: NextPage = () => {
   const { connected, wallet } = useWallet();
-  const [assets, setAssets] = useState<AssetExtended[] | null>(null);
+  const [assets, setAssets] = useState<null | any>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
   async function getAssets() {
@@ -19,7 +17,6 @@ const Home: NextPage = () => {
       setLoading(false);
     }
   }
-
 
   return (
     <div>
