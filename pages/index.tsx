@@ -4,6 +4,8 @@ import type { NextPage } from "next";
 import { useWallet } from '@meshsdk/react';
 import { CardanoWallet } from '@meshsdk/react';
 import { AssetExtended } from '@meshsdk/core';
+import WalletLogin from "../components/WalletLogin";
+import MyComponent from "../components/MyComponent";
 
 const Home: NextPage = () => {
   const { connected, wallet } = useWallet();
@@ -22,6 +24,8 @@ const Home: NextPage = () => {
   return (
     <div>
       <CardanoWallet />
+      <WalletLogin />
+      <MyComponent />
       {connected && (
         <>
           <h1>Get Wallet Assets</h1>
