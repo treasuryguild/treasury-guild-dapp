@@ -3,19 +3,20 @@ import "../styles/globals.css";
 import "@meshsdk/react/styles.css";
 import type { AppProps } from "next/app";
 import { MeshProvider } from "@meshsdk/react";
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { SessionContextProvider } from '@supabase/auth-helpers-react';
+import { AuthProvider } from '../contexts/auth-context';
 import { useState } from 'react';
+import Navbar from "../components/Navbar";
 
 function MyApp({ Component, pageProps }: AppProps) {
-  const [supabaseClient] = useState(() => createClientComponentClient());
+  
 
   return (
-    <SessionContextProvider supabaseClient={supabaseClient}>
+    <AuthProvider>
       <MeshProvider>
+        <Navbar />
         <Component {...pageProps} />
       </MeshProvider>
-    </SessionContextProvider>
+    </AuthProvider>
   );
 }
 

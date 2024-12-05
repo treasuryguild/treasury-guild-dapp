@@ -1,17 +1,28 @@
 // types.ts
-type UserWallet = {
-  id: string
-  user_id: string
-  wallet_address: string
-  nonce: string
-  created_at: string
+type WalletInfo = {
+  address: string;
+  isPrimary: boolean;
 }
 
 type UserProfile = {
-  id: string
-  discord_id?: string
-  primary_wallet?: string
-  email?: string
-  username: string
-  created_at: string
+  id: string;
+  email?: string;
+  discordId?: string;
+  discordUsername?: string;
+  githubId?: string;
+  githubUsername?: string;
+  wallets: WalletInfo[];
+  organizations: string[]; // IDs of organizations user belongs to
+  discordRoles?: string[];
 }
+
+type Organization = {
+  id: string;
+  name: string;
+  walletAddress: string;
+  members: {
+    userId: string;
+    role: 'admin' | 'member';
+  }[];
+}
+
