@@ -1,5 +1,6 @@
 // components/Navbar.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { FaDiscord, FaGithub, FaWallet, FaBars, FaTimes, FaChevronDown } from 'react-icons/fa';
 import { useAuth } from '../contexts/auth-context';
@@ -37,10 +38,40 @@ interface UserMenuProps {
 const UserMenu = ({ user }: UserMenuProps) => {
   const { logout } = useAuth() as AuthContextType;
   const [isOpen, setIsOpen] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    function updateDropdownPosition() {
+      if (isOpen && buttonRef.current) {
+        const rect = buttonRef.current.getBoundingClientRect();
+        const dropdown = document.querySelector(`.${styles.dropdownContent}`) as HTMLElement;
+        if (dropdown) {
+          dropdown.style.top = `${rect.bottom + 8}px`;
+          dropdown.style.right = `${window.innerWidth - rect.right}px`;
+        }
+      }
+    }
+
+    updateDropdownPosition();
+    window.addEventListener('resize', updateDropdownPosition);
+    return () => window.removeEventListener('resize', updateDropdownPosition);
+  }, [isOpen]);
+
+  // Handler to close dropdown
+  const handleClose = () => {
+    setIsOpen(false);
+  };
+
+  // Handler for logout
+  const handleLogout = () => {
+    logout();
+    handleClose();
+  };
 
   return (
     <div className={styles.dropdown}>
       <button 
+        ref={buttonRef}
         className={`${styles.button} ${styles.buttonGhost}`}
         onClick={() => setIsOpen(!isOpen)}
       >
@@ -48,21 +79,35 @@ const UserMenu = ({ user }: UserMenuProps) => {
         <FaChevronDown size={16} />
       </button>
       
-      {isOpen && (
-        <div className={styles.dropdownContent}>
-          <Link href="/profile" className={styles.dropdownItem}>
-            Profile
-          </Link>
-          <Link href="/organizations" className={styles.dropdownItem}>
-            Organizations
-          </Link>
-          <button 
-            onClick={logout} 
-            className={`${styles.dropdownItem} ${styles.buttonGhost}`}
+      {isOpen && createPortal(
+        <div className={styles.portalContainer}>
+          <div 
+            className={styles.dropdownContent}
+            onClick={(e) => e.stopPropagation()}
           >
-            Logout
-          </button>
-        </div>
+            <Link 
+              href="/profile" 
+              className={styles.dropdownItem}
+              onClick={handleClose}
+            >
+              Profile
+            </Link>
+            <Link 
+              href="/organizations" 
+              className={styles.dropdownItem}
+              onClick={handleClose}
+            >
+              Organizations
+            </Link>
+            <button 
+              onClick={handleLogout}
+              className={`${styles.dropdownItem} ${styles.buttonGhost}`}
+            >
+              Logout
+            </button>
+          </div>
+        </div>,
+        document.body
       )}
     </div>
   );

@@ -3,16 +3,9 @@ import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// Define protected routes instead of public ones
-const protectedRoutes = [
-  '/dashboard',
-  '/profile',
-  // add other protected routes
-];
-
 export async function middleware(req: NextRequest) {
-  // Only run middleware for protected routes
-  if (!protectedRoutes.some(route => req.nextUrl.pathname.startsWith(route))) {
+  // Only protect API routes and static assets
+  if (!req.nextUrl.pathname.startsWith('/api/')) {
     return NextResponse.next();
   }
 
@@ -21,18 +14,11 @@ export async function middleware(req: NextRequest) {
   const { data: { session } } = await supabase.auth.getSession();
 
   if (!session) {
-    const redirectUrl = new URL('/login', req.url);
-    redirectUrl.searchParams.set('redirectTo', req.nextUrl.pathname);
-    return NextResponse.redirect(redirectUrl);
+    return new NextResponse(
+      JSON.stringify({ error: 'Unauthorized' }),
+      { status: 401, headers: { 'Content-Type': 'application/json' } }
+    );
   }
 
   return res;
 }
-
-export const config = {
-  matcher: [
-    '/dashboard/:path*',
-    '/profile/:path*',
-    // add other protected paths
-  ]
-};

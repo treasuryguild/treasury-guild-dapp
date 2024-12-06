@@ -2,21 +2,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { BrowserWallet } from '@meshsdk/core';
+import { AuthContextType } from '../types/auth';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
-
-interface AuthContextType {
-  user: UserProfile | null;
-  connectWallet: () => Promise<void>;
-  connectDiscord: () => Promise<void>;
-  connectGithub: () => Promise<void>;
-  setPrimaryWallet: (address: string) => Promise<void>;
-  logout: () => Promise<void>;
-  isLoading: boolean;
-}
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -96,10 +87,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const connectWallet = async () => {
+  const connectWallet = async (provider: string = 'nami') => {
     try {
       console.log('Starting wallet connection...');
-      const wallet = await BrowserWallet.enable('nami');
+      const wallet = await BrowserWallet.enable(provider);
       const address = await wallet.getChangeAddress();
       console.log('Got wallet address:', address);
   

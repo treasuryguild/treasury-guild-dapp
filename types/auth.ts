@@ -16,9 +16,10 @@ export interface User {
 
 export interface AuthContextType {
   user: User | null;
-  connectWallet: () => Promise<void>;
+  connectWallet: (provider: string) => Promise<void>;  
   connectDiscord: () => Promise<void>;
   connectGithub: () => Promise<void>;
   setPrimaryWallet: (address: string) => Promise<void>;
   logout: () => Promise<void>;
+  isLoading: boolean;
 }
