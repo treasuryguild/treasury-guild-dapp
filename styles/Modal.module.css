@@ -25,6 +25,7 @@
   font-size: 1.25rem;
   font-weight: 600;
   margin-bottom: 1rem;
+  color: #111827;
 }
 
 .divider {
@@ -47,7 +48,6 @@
   font-size: 0.875rem;
 }
 
-/* Button styles needed for the modal */
 .button {
   display: inline-flex;
   align-items: center;
@@ -59,13 +59,18 @@
   transition: all 0.2s;
 }
 
+.button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
 .buttonPrimary {
   background: #2563eb;
   color: white;
   border: none;
 }
 
-.buttonPrimary:hover {
+.buttonPrimary:hover:not(:disabled) {
   background: #1d4ed8;
 }
 
@@ -75,11 +80,10 @@
   border: 1px solid #e5e7eb;
 }
 
-.buttonOutline:hover {
+.buttonOutline:hover:not(:disabled) {
   background: #f9fafb;
 }
 
-/* Add to Modal.module.css */
 .walletSelection {
   display: flex;
   gap: 0.5rem;
@@ -96,6 +100,10 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.dropdownButton span {
+  margin-right: auto;
 }
 
 .walletDropdownContent {
@@ -120,8 +128,18 @@
   border: none;
   cursor: pointer;
   transition: all 0.2s;
+  color: #111827;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .walletOption:hover {
   background: #f9fafb;
+}
+
+.walletIcon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
 }

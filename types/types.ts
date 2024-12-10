@@ -12,7 +12,7 @@ type UserProfile = {
   githubId?: string;
   githubUsername?: string;
   wallets: WalletInfo[];
-  organizations: string[]; // IDs of organizations user belongs to
+  organizations: string[]; 
   discordRoles?: string[];
 }
 

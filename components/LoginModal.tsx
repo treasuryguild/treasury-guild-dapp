@@ -1,7 +1,7 @@
-// components/LoginModal.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaDiscord, FaGithub, FaWallet, FaChevronDown } from 'react-icons/fa';
 import { useAuth } from '../contexts/auth-context';
+import { BrowserWallet } from '@meshsdk/core';
 import styles from '../styles/Modal.module.css';
 
 interface LoginModalProps {
@@ -9,30 +9,68 @@ interface LoginModalProps {
   onClose: () => void;
 }
 
-// Define supported wallets
-const SUPPORTED_WALLETS = [
-  { id: 'nami', name: 'Nami' },
-  { id: 'eternl', name: 'Eternl' },
-  { id: 'flint', name: 'Flint' },
-  { id: 'gero', name: 'GeroWallet' },
-  // Add more wallets as needed
-];
+interface WalletInfo {
+  id: string;
+  name: string;
+  icon: string;
+  version: string;
+}
 
 const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
   const { connectWallet, connectDiscord, connectGithub } = useAuth();
-  const [selectedWallet, setSelectedWallet] = useState(SUPPORTED_WALLETS[0].id);
+  const [availableWallets, setAvailableWallets] = useState<WalletInfo[]>([]);
+  const [selectedWallet, setSelectedWallet] = useState<string>('');
   const [isWalletDropdownOpen, setIsWalletDropdownOpen] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [isLoadingWallets, setIsLoadingWallets] = useState(true);
+
+  useEffect(() => {
+    const fetchWallets = async () => {
+      try {
+        const installedWallets = await BrowserWallet.getInstalledWallets();
+        
+        // Transform the wallets data to match our interface
+        const walletList = installedWallets.map(wallet => ({
+          id: wallet.id.toLowerCase(),
+          name: wallet.name,
+          icon: wallet.icon,
+          version: wallet.version
+        }));
+        
+        setAvailableWallets(walletList);
+        // Set the first wallet as selected if we have any wallets
+        if (walletList.length > 0 && !selectedWallet) {
+          setSelectedWallet(walletList[0].id);
+        }
+      } catch (error) {
+        console.error('Error fetching installed wallets:', error);
+      } finally {
+        setIsLoadingWallets(false);
+      }
+    };
+
+    if (isOpen) {
+      fetchWallets();
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
   const handleConnectWallet = async () => {
+    if (!selectedWallet) return;
+    
     try {
+      setIsConnecting(true);
       await connectWallet(selectedWallet);
       onClose();
     } catch (error) {
       console.error('Failed to connect wallet:', error);
+    } finally {
+      setIsConnecting(false);
     }
   };
+
+  const noWalletsInstalled = !isLoadingWallets && availableWallets.length === 0;
 
   return (
     <div className={styles.modal} onClick={onClose}>
@@ -48,14 +86,32 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
               <button 
                 className={`${styles.button} ${styles.buttonOutline} ${styles.dropdownButton}`}
                 onClick={() => setIsWalletDropdownOpen(!isWalletDropdownOpen)}
+                disabled={isConnecting || noWalletsInstalled}
               >
-                {SUPPORTED_WALLETS.find(w => w.id === selectedWallet)?.name}
+                {isLoadingWallets ? (
+                  'Loading wallets...'
+                ) : noWalletsInstalled ? (
+                  'No wallets installed'
+                ) : (
+                  <>
+                    {selectedWallet && (
+                      <img 
+                        src={availableWallets.find(w => w.id === selectedWallet)?.icon}
+                        alt=""
+                        className={styles.walletIcon}
+                        width={20}
+                        height={20}
+                      />
+                    )}
+                    <span>{availableWallets.find(w => w.id === selectedWallet)?.name}</span>
+                  </>
+                )}
                 <FaChevronDown size={16} />
               </button>
               
-              {isWalletDropdownOpen && (
+              {isWalletDropdownOpen && availableWallets.length > 0 && (
                 <div className={styles.walletDropdownContent}>
-                  {SUPPORTED_WALLETS.map(wallet => (
+                  {availableWallets.map(wallet => (
                     <button
                       key={wallet.id}
                       className={styles.walletOption}
@@ -64,7 +120,14 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
                         setIsWalletDropdownOpen(false);
                       }}
                     >
-                      {wallet.name}
+                      <img 
+                        src={wallet.icon} 
+                        alt=""
+                        className={styles.walletIcon}
+                        width={20}
+                        height={20}
+                      />
+                      <span>{wallet.name}</span>
                     </button>
                   ))}
                 </div>
@@ -74,9 +137,10 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
             <button 
               onClick={handleConnectWallet}
               className={`${styles.button} ${styles.buttonPrimary}`}
+              disabled={isConnecting || noWalletsInstalled || !selectedWallet}
             >
               <FaWallet size={20} />
-              Connect
+              {isConnecting ? 'Connecting...' : 'Connect'}
             </button>
           </div>
           
@@ -87,6 +151,7 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
           <button 
             onClick={connectDiscord}
             className={`${styles.button} ${styles.buttonOutline}`}
+            disabled={isConnecting}
           >
             <FaDiscord size={20} />
             Connect Discord
@@ -95,6 +160,7 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
           <button 
             onClick={connectGithub}
             className={`${styles.button} ${styles.buttonOutline}`}
+            disabled={isConnecting}
           >
             <FaGithub size={20} />
             Connect Github
