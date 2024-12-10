@@ -1,3 +1,4 @@
+// types/auth.ts
 export interface WalletInfo {
   address: string;
   isPrimary: boolean;
