@@ -1,4 +1,4 @@
-/* styles/Profile.module.css */
+/* Profile.module.css */
 .container {
   max-width: 64rem;
   margin: 0 auto;
@@ -9,6 +9,7 @@
   font-size: 1.875rem;
   font-weight: 700;
   margin-bottom: 2rem;
+  color: #111827;
 }
 
 .section {
@@ -23,12 +24,14 @@
   font-size: 1.25rem;
   font-weight: 600;
   margin-bottom: 1rem;
+  color: #111827;
 }
 
 .subsectionTitle {
   font-size: 1.125rem;
   font-weight: 500;
   margin-bottom: 0.75rem;
+  color: #111827;
 }
 
 .accountsGrid {
@@ -49,6 +52,8 @@
   font-size: 0.875rem;
   border-radius: 0.25rem;
   transition: background-color 0.2s;
+  border: none;
+  cursor: pointer;
 }
 
 .connectButtonDiscord {
@@ -82,6 +87,7 @@
   padding: 0.75rem;
   border: 1px solid #e5e7eb;
   border-radius: 0.25rem;
+  background: white;
 }
 
 .walletInfo {
@@ -125,12 +131,6 @@
   gap: 0.75rem;
 }
 
-@media (min-width: 640px) {
-  .availableWalletsGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
 .walletButton {
   display: flex;
   align-items: center;
@@ -141,7 +141,7 @@
   transition: background-color 0.2s;
   width: 100%;
   text-align: left;
-  background: none;
+  background: white;
   cursor: pointer;
 }
 
@@ -177,4 +177,95 @@
   color: #ef4444;
   font-size: 0.875rem;
   margin-top: 0.5rem;
+}
+
+@media (min-width: 640px) {
+  .availableWalletsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .container {
+    background: #16161e;
+    color: #a9b1d6;
+  }
+
+  .title,
+  .sectionTitle,
+  .subsectionTitle {
+    color: #c0caf5;
+  }
+
+  .section {
+    background-color: #1a1b26;
+    border: 1px solid #2f3042;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
+  }
+
+  .connectButtonDiscord {
+    background-color: #7aa2f7;
+    color: #1a1b26;
+  }
+
+  .connectButtonDiscord:hover {
+    background-color: #6691e9;
+  }
+
+  .connectButtonGithub {
+    background-color: #565f89;
+    color: #c0caf5;
+  }
+
+  .connectButtonGithub:hover {
+    background-color: #4a5175;
+  }
+
+  .walletItem {
+    background: #1a1b26;
+    border: 1px solid #2f3042;
+  }
+
+  .primaryBadge {
+    background-color: #1b3d36;
+    color: #9ece6a;
+  }
+
+  .setPrimaryButton {
+    color: #7aa2f7;
+  }
+
+  .setPrimaryButton:hover {
+    color: #6691e9;
+  }
+
+  .walletButton {
+    background: #1a1b26;
+    border: 1px solid #2f3042;
+    color: #a9b1d6;
+  }
+
+  .walletButtonEnabled:hover {
+    background-color: #2f3042;
+  }
+
+  .walletButtonDisabled {
+    background-color: #2f3042;
+  }
+
+  .connected {
+    color: #9ece6a;
+  }
+
+  .disconnected {
+    color: #565f89;
+  }
+
+  .loadingText {
+    color: #787c99;
+  }
+
+  .errorText {
+    color: #f7768e;
+  }
 }

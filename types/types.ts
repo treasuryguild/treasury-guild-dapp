@@ -7,13 +7,13 @@ type WalletInfo = {
 type UserProfile = {
   id: string;
   email?: string;
-  discordId?: string;
-  discordUsername?: string;
-  githubId?: string;
-  githubUsername?: string;
+  discord_id?: string;
+  discord_username?: string;
+  github_id?: string;
+  github_username?: string;
   wallets: WalletInfo[];
   organizations: string[]; 
-  discordRoles?: string[];
+  discord_roles?: string[];
 }
 
 type Organization = {

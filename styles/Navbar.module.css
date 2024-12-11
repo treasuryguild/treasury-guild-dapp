@@ -3,8 +3,11 @@
   background: white;
   border-bottom: 1px solid #e5e7eb;
   padding: 0 1rem;
-  position: relative;  
-  z-index: 100;        
+  position: fixed; 
+  width: 100%;    
+  top: 0;         
+  left: 0;        
+  z-index: 100;
 }
 
 .container {
@@ -38,11 +41,13 @@
   border: none;
   padding: 0.5rem;
   cursor: pointer;
+  color: #374151;
 }
 
 .mobileMenu {
   padding: 1rem;
   border-top: 1px solid #e5e7eb;
+  background: white;
 }
 
 .navLink {
@@ -112,7 +117,7 @@
 }
 
 .dropdownContent {
-  position: fixed; /* Change to fixed */
+  position: fixed;
   background: white;
   border: 1px solid #e5e7eb;
   border-radius: 0.375rem;
@@ -120,7 +125,7 @@
   min-width: 12rem;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
   z-index: 2000;
-  pointer-events: auto; /* Enable pointer events */
+  pointer-events: auto;
 }
 
 .dropdownItem {
@@ -149,6 +154,16 @@
   color: #d1d5db;
 }
 
+.error {
+  background-color: #fee2e2;
+  border: 1px solid #ef4444;
+  color: #dc2626;
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
+
 @media (min-width: 640px) {
   .desktopMenu {
     display: flex;
@@ -165,12 +180,85 @@
   }
 }
 
-.error {
-  background-color: #fee2e2;
-  border: 1px solid #ef4444;
-  color: #dc2626;
-  padding: 0.75rem;
-  border-radius: 0.375rem;
-  margin-bottom: 1rem;
-  font-size: 0.875rem;
+@media (prefers-color-scheme: dark) {
+  .navbar {
+    background: #1a1b26;
+    border-bottom: 1px solid #2f3042;
+  }
+
+  .logo {
+    color: #a9b1d6;
+  }
+
+  .mobileMenuButton {
+    color: #a9b1d6;
+  }
+
+  .mobileMenu {
+    background: #1a1b26;
+    border-top: 1px solid #2f3042;
+  }
+
+  .navLink {
+    color: #a9b1d6;
+  }
+
+  .navLink:hover {
+    color: #c0caf5;
+  }
+
+  .buttonPrimary {
+    background: #7aa2f7;
+    color: #1a1b26;
+  }
+
+  .buttonPrimary:hover {
+    background: #6691e9;
+  }
+
+  .buttonOutline {
+    background: #1a1b26;
+    color: #a9b1d6;
+    border: 1px solid #2f3042;
+  }
+
+  .buttonOutline:hover {
+    background: #2f3042;
+  }
+
+  .buttonGhost {
+    color: #a9b1d6;
+  }
+
+  .buttonGhost:hover {
+    background: #2f3042;
+  }
+
+  .dropdownContent {
+    background: #1a1b26;
+    border: 1px solid #2f3042;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+  }
+
+  .dropdownItem {
+    color: #a9b1d6;
+  }
+
+  .dropdownItem:hover {
+    background: #2f3042;
+  }
+
+  .iconConnected {
+    color: #9ece6a;
+  }
+
+  .iconDisconnected {
+    color: #565f89;
+  }
+
+  .error {
+    background-color: #3f2832;
+    border: 1px solid #db4b4b;
+    color: #f7768e;
+  }
 }

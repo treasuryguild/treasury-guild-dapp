@@ -17,11 +17,11 @@ const ConnectionStatus = ({ user }: ConnectionStatusProps) => {
     <div className={styles.connectionStatus}>
       <FaDiscord 
         size={20} 
-        className={user.discordId ? styles.iconConnected : styles.iconDisconnected} 
+        className={user.discord_id ? styles.iconConnected : styles.iconDisconnected} 
       />
       <FaGithub 
         size={20} 
-        className={user.githubId ? styles.iconConnected : styles.iconDisconnected} 
+        className={user.github_id ? styles.iconConnected : styles.iconDisconnected} 
       />
       <FaWallet 
         size={20} 
@@ -75,7 +75,7 @@ const UserMenu = ({ user }: UserMenuProps) => {
         className={`${styles.button} ${styles.buttonGhost}`}
         onClick={() => setIsOpen(!isOpen)}
       >
-        {user.discordUsername || user.wallets[0]?.address.slice(0, 8)}
+        {user.discord_username || user.wallets[0]?.address.slice(0, 8)}
         <FaChevronDown size={16} />
       </button>
       

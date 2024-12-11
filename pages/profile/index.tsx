@@ -26,6 +26,10 @@ const ProfileContent = () => {
   useEffect(() => {
     fetchWallets();
   }, []);
+  
+  useEffect(() => {
+    console.log('Current user:', user);
+  }, [user]);
 
   const fetchWallets = async () => {
     try {
@@ -79,13 +83,13 @@ const ProfileContent = () => {
       <div className={styles.section}>
         <h2 className={styles.sectionTitle}>Connected Accounts</h2>
         <div className={styles.accountsGrid}>
-          <div className={styles.accountItem}>
+        <div className={styles.accountItem}>
             <FaDiscord 
               size={24} 
-              className={user.discordId ? styles.connected : styles.disconnected} 
+              className={user.discord_id ? styles.connected : styles.disconnected} 
             />
-            <span>{user.discordUsername || "Discord not connected"}</span>
-            {!user.discordId && (
+            <span>{user.discord_username || "Discord not connected"}</span>
+            {!user.discord_id && (
               <button
                 onClick={connectDiscord}
                 className={`${styles.connectButton} ${styles.connectButtonDiscord}`}
@@ -98,10 +102,10 @@ const ProfileContent = () => {
           <div className={styles.accountItem}>
             <FaGithub 
               size={24} 
-              className={user.githubId ? styles.connected : styles.disconnected} 
+              className={user.github_id ? styles.connected : styles.disconnected} 
             />
-            <span>{user.githubUsername || "GitHub not connected"}</span>
-            {!user.githubId && (
+            <span>{user.github_username || "GitHub not connected"}</span>
+            {!user.github_id && (
               <button
                 onClick={connectGithub}
                 className={`${styles.connectButton} ${styles.connectButtonGithub}`}
