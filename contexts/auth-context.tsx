@@ -137,34 +137,73 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         : providerUser.user_metadata?.user_name || 
           providerUser.user_metadata?.preferred_username;
   
-      console.log('Extracted Provider ID:', providerId);
-      console.log('Extracted Username:', username);
-      console.log('Current profile:', currentProfile);
+      console.log(`Extracted ${provider} ID:`, providerId);
+      console.log(`Extracted ${provider} username:`, username);
   
-      // First check if we have a current profile
-      if (currentProfile?.id) {
-        console.log('Existing profile found, updating:', currentProfile.id);
+      // First check if there's a profile that already has this provider ID
+      const { data: existingProfileWithProvider } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq(`${provider}_id`, providerId)
+        .maybeSingle();
+  
+      if (existingProfileWithProvider) {
+        console.log('Found existing profile with this provider:', existingProfileWithProvider);
         
-        // Update existing profile with new OAuth info
+        // Update username if needed
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({
+            [`${provider}_username`]: username
+          })
+          .eq('id', existingProfileWithProvider.id);
+  
+        if (updateError) throw updateError;
+  
+        // Link the auth if not already linked
+        const { error: linkError } = await supabase
+          .from('user_profiles')
+          .insert({
+            auth_id: providerUser.id,
+            profile_id: existingProfileWithProvider.id
+          });
+  
+        if (linkError && !linkError.message.includes('unique constraint')) {
+          throw linkError;
+        }
+  
+        await fetchUserProfile(existingProfileWithProvider.id);
+        return;
+      }
+  
+      // Get the stored profile info from previous OAuth connection
+      const storedProfileJson = localStorage.getItem('previousProfile');
+      const storedProfile = storedProfileJson ? JSON.parse(storedProfileJson) : null;
+      console.log('Found stored profile:', storedProfile);
+  
+      if (storedProfile) {
+        console.log('Linking with stored profile:', storedProfile.id);
+        
+        // Update the stored profile with the new provider info
         const { error: updateError } = await supabase
           .from('profiles')
           .update({
             [`${provider}_id`]: providerId,
             [`${provider}_username`]: username
           })
-          .eq('id', currentProfile.id);
+          .eq('id', storedProfile.id);
   
         if (updateError) {
           console.error('Error updating profile:', updateError);
           throw updateError;
         }
   
-        // Link new auth to existing profile
+        // Create link between OAuth auth and stored profile
         const { error: linkError } = await supabase
           .from('user_profiles')
           .insert({
             auth_id: providerUser.id,
-            profile_id: currentProfile.id
+            profile_id: storedProfile.id
           });
   
         if (linkError && !linkError.message.includes('unique constraint')) {
@@ -172,77 +211,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           throw linkError;
         }
   
-        await fetchUserProfile(currentProfile.id);
+        // Clear the stored profile
+        localStorage.removeItem('previousProfile');
+  
+        await fetchUserProfile(storedProfile.id);
         return;
       }
   
-      // Check if this auth_id already has a profile link
-      const { data: existingLink } = await supabase
-        .from('user_profiles')
-        .select('profile_id')
-        .eq('auth_id', providerUser.id)
-        .maybeSingle();
-  
-      console.log('Existing link check:', existingLink);
-  
-      if (existingLink?.profile_id) {
-        console.log('Found existing profile link:', existingLink.profile_id);
-        // Update the existing profile with latest provider info
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({
-            [`${provider}_id`]: providerId,
-            [`${provider}_username`]: username
-          })
-          .eq('id', existingLink.profile_id);
-  
-        if (updateError) throw updateError;
-        
-        await fetchUserProfile(existingLink.profile_id);
-        return;
-      }
-  
-      // Check if there's an existing profile with this provider ID
-      const { data: existingProfiles, error: existingProfileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq(`${provider}_id`, providerId)
-        .maybeSingle();
-  
-      console.log('Existing profile check:', existingProfiles);
-  
-      if (existingProfileError) throw existingProfileError;
-  
-      if (existingProfiles) {
-        console.log('Found existing profile:', existingProfiles);
-        // Update existing profile with latest info
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({
-            [`${provider}_username`]: username
-          })
-          .eq('id', existingProfiles.id);
-  
-        if (updateError) throw updateError;
-  
-        // Link current auth to existing profile
-        const { error: linkError } = await supabase
-          .from('user_profiles')
-          .insert({
-            auth_id: providerUser.id,
-            profile_id: existingProfiles.id
-          });
-  
-        if (linkError && !linkError.message.includes('unique constraint')) {
-          throw linkError;
-        }
-        
-        await fetchUserProfile(existingProfiles.id);
-        return;
-      }
-  
-      console.log('No existing profile found, creating new one');
-      // Create new profile if none exists
+      // If we get here, create a new profile
+      console.log('Creating new profile');
       const newProfile = {
         id: providerUser.id,
         [`${provider}_id`]: providerId,
@@ -256,7 +233,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .select()
         .single();
   
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error('Error creating profile:', profileError);
+        throw profileError;
+      }
   
       // Create initial user_profiles link
       const { error: linkError } = await supabase
@@ -266,11 +246,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           profile_id: providerUser.id
         });
   
-      if (linkError) throw linkError;
+      if (linkError) {
+        console.error('Error creating profile link:', linkError);
+        throw linkError;
+      }
   
+      console.log('Successfully created new profile');
       await fetchUserProfile(providerUser.id);
     } catch (error) {
       console.error('Error in handleOAuthProfile:', error);
+      // Clear stored profile on error
+      localStorage.removeItem('previousProfile');
       throw error;
     }
   };
@@ -386,6 +372,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const connectDiscord = async () => {
     try {
+      // Store current user profile before Discord connection
+      if (user) {
+        // Store in localStorage since we'll lose state during OAuth redirect
+        localStorage.setItem('previousProfile', JSON.stringify({
+          id: user.id,
+          discord_id: user.discord_id,
+          github_id: user.github_id,
+          wallets: user.wallets
+        }));
+      }
+  
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'discord',
         options: {
@@ -403,6 +400,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const connectGithub = async () => {
     try {
+      // Store current user profile before GitHub connection
+      if (user) {
+        localStorage.setItem('previousProfile', JSON.stringify({
+          id: user.id,
+          discord_id: user.discord_id,
+          github_id: user.github_id,
+          wallets: user.wallets
+        }));
+      }
+  
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'github',
         options: {
