@@ -1,3 +1,4 @@
+/*globals.css*/
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -14,6 +15,7 @@ html,
 body {
   max-width: 100vw;
   overflow-x: hidden;
+  padding-top: 2.5rem;
 }
 
 body {
