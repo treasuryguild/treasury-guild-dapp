@@ -23,12 +23,30 @@ const ProfileContent = () => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  async function checkWallet() {
+    if (!user?.wallets?.length) return;
+    
+    const primaryWallet = user.wallets.find(w => w.isPrimary);
+    if (!primaryWallet) return;
+  
+    try {
+      const wallet = await BrowserWallet.enable(primaryWallet.provider);
+      const address = await wallet.getChangeAddress();
+      console.log('Wallet address:', address);
+    } catch (error) {
+      console.error('Error checking wallet:', error);
+    }
+  }
+
   useEffect(() => {
     fetchWallets();
   }, []);
   
   useEffect(() => {
     console.log('Current user:', user);
+    if (user) {
+      checkWallet()
+    }
   }, [user]);
 
   const fetchWallets = async () => {

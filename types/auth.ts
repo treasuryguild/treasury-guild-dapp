@@ -2,6 +2,7 @@
 export interface WalletInfo {
   address: string;
   isPrimary: boolean;
+  provider: string;
 }
 
 export interface User {

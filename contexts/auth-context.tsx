@@ -281,11 +281,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           throw new Error('Wallet already connected to another account');
         }
   
-        // Add wallet to current user's profile
+        // Add wallet to current user's profile with provider information
         const updatedWallets = [...(user.wallets || [])];
         if (!updatedWallets.some(w => w.address === address)) {
           updatedWallets.push({
             address,
+            provider, // Save the provider name
             isPrimary: updatedWallets.length === 0 // Make primary if it's the first wallet
           });
   
@@ -301,8 +302,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
   
-      // If no user is logged in, proceed with anonymous auth flow
-      // Check if this wallet exists in any profile
+      // For anonymous auth flow, create new profile with wallet and provider
       const { data: existingProfiles, error: existingProfileError } = await supabase.rpc(
         'get_profile_by_wallet_address',
         { wallet_address: address }
@@ -310,14 +310,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   
       if (existingProfileError) throw existingProfileError;
   
-      // If wallet exists in a profile, sign in anonymously and link to that profile
       if (existingProfiles && existingProfiles.length > 0) {
         const { data: { session: anonSession }, error: anonError } = 
           await supabase.auth.signInAnonymously();
    
         if (anonError) throw anonError;
   
-        // Create link between the anonymous user and the existing profile
         const { error: linkError } = await supabase
           .from('user_profiles')
           .insert({
@@ -331,7 +329,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
   
-      // If no existing profile found, create new anonymous session
       const { data: { session: newAnonSession }, error: newAnonError } = 
         await supabase.auth.signInAnonymously();
   
@@ -341,19 +338,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error('Failed to create anonymous session');
       }
   
-      // Create new profile with wallet
+      // Create new profile with wallet including provider information
       const { data: newProfile, error: createProfileError } = await supabase
         .from('profiles')
         .insert([{
           id: newAnonSession.user.id,
-          wallets: [{ address, isPrimary: true }]
+          wallets: [{
+            address,
+            provider, // Save the provider name
+            isPrimary: true
+          }]
         }])
         .select()
         .single();
   
       if (createProfileError) throw createProfileError;
   
-      // Create initial user_profiles link
       const { error: initialLinkError } = await supabase
         .from('user_profiles')
         .insert({
