@@ -16,12 +16,18 @@ interface WalletInfo {
   version: string;
 }
 
+interface WalletBalance {
+  lovelace: string;
+}
+
 const ProfileContent = () => {
   const { user, connectWallet, connectDiscord, connectGithub, setPrimaryWallet } = useAuth();
   const [availableWallets, setAvailableWallets] = useState<WalletInfo[]>([]);
   const [isLoadingWallets, setIsLoadingWallets] = useState(true);
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [primaryWalletBalance, setPrimaryWalletBalance] = useState<WalletBalance | null>(null);
+  const [isLoadingBalance, setIsLoadingBalance] = useState(false);
 
   async function checkWallet() {
     if (!user?.wallets?.length) return;
@@ -31,10 +37,12 @@ const ProfileContent = () => {
   
     try {
       const wallet = await BrowserWallet.enable(primaryWallet.provider);
-      const address = await wallet.getChangeAddress();
-      console.log('Wallet address:', address);
+      const balance = await wallet.getBalance();
+      setPrimaryWalletBalance({ lovelace: balance[0].quantity });
+      console.log('Primary wallet balance:', balance);
     } catch (error) {
       console.error('Error checking wallet:', error);
+      setPrimaryWalletBalance(null);
     }
   }
 
@@ -43,9 +51,9 @@ const ProfileContent = () => {
   }, []);
   
   useEffect(() => {
-    console.log('Current user:', user);
     if (user) {
-      checkWallet()
+      setIsLoadingBalance(true);
+      checkWallet().finally(() => setIsLoadingBalance(false));
     }
   }, [user]);
 
@@ -91,17 +99,63 @@ const ProfileContent = () => {
     }
   };
 
+  const formatAda = (lovelace: string) => {
+    const ada = parseInt(lovelace) / 1000000;
+    return ada.toLocaleString(undefined, { 
+      minimumFractionDigits: 3,
+      maximumFractionDigits: 3
+    });
+  };
+
   if (!user) return null;
+
+  const primaryWallet = user.wallets.find(w => w.isPrimary);
+  const matchingAvailableWallet = primaryWallet 
+    ? availableWallets.find(w => w.id.toLowerCase() === primaryWallet.provider.toLowerCase())
+    : null;
 
   return (
     <div className={styles.container}>
       <h1 className={styles.title}>Profile</h1>
 
-      {/* Connection Status Summary */}
+      {primaryWallet && (
+        <div className={styles.section}>
+          <h2 className={styles.sectionTitle}>Primary Wallet</h2>
+          <div className={styles.primaryWalletSummary}>
+            <div className={styles.walletHeader}>
+              {matchingAvailableWallet && (
+                <img 
+                  src={matchingAvailableWallet.icon} 
+                  alt={matchingAvailableWallet.name}
+                  className={styles.walletIcon} 
+                />
+              )}
+              <span className={styles.walletName}>
+                {matchingAvailableWallet?.name || primaryWallet.provider}
+              </span>
+            </div>
+            <div className={styles.walletDetails}>
+              <span className={styles.walletAddress}>
+                {primaryWallet.address.slice(0, 8)}...{primaryWallet.address.slice(-6)}
+              </span>
+              {isLoadingBalance ? (
+                <span className={styles.loadingText}>Loading balance...</span>
+              ) : primaryWalletBalance ? (
+                <span className={styles.balanceText}>
+                  {formatAda(primaryWalletBalance.lovelace)} ₳
+                </span>
+              ) : (
+                <span className={styles.errorText}>Unable to load balance</span>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className={styles.section}>
         <h2 className={styles.sectionTitle}>Connected Accounts</h2>
         <div className={styles.accountsGrid}>
-        <div className={styles.accountItem}>
+          <div className={styles.accountItem}>
             <FaDiscord 
               size={24} 
               className={user.discord_id ? styles.connected : styles.disconnected} 
@@ -136,13 +190,11 @@ const ProfileContent = () => {
         </div>
       </div>
 
-      {/* Wallets Section */}
       <div className={styles.section}>
         <h2 className={styles.sectionTitle}>Connected Wallets</h2>
         
         {error && <p className={styles.errorText}>{error}</p>}
         
-        {/* Current Wallets */}
         {user.wallets.length > 0 && (
           <div>
             <h3 className={styles.subsectionTitle}>Your Wallets</h3>
@@ -178,7 +230,6 @@ const ProfileContent = () => {
           </div>
         )}
 
-        {/* Available Wallets */}
         <div>
           <h3 className={styles.subsectionTitle}>Add Wallet</h3>
           {isLoadingWallets ? (

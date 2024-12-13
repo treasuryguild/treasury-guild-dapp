@@ -122,7 +122,7 @@ const Navbar = () => {
     <nav className={styles.navbar}>
       <div className={styles.container}>
         <Link href="/" className={styles.logo}>
-          YourApp
+          Treasury Guild
         </Link>
 
         <div className={styles.desktopMenu}>
