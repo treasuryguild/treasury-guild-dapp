@@ -1,7 +1,7 @@
 // pages/auth/callback.tsx
 import { useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { useAuth } from '../../contexts/auth-context';
+import { useAuth } from '../../shared/contexts/auth-context';
 
 export default function AuthCallback() {
   const router = useRouter();

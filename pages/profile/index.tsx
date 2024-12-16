@@ -3,11 +3,12 @@
 
 import { useEffect, useState } from 'react';
 import { FaDiscord, FaGithub, FaWallet, FaCheck } from 'react-icons/fa';
-import { useAuth } from '../../contexts/auth-context';
+import { useAuth } from '../../shared/contexts/auth-context';
 import { BrowserWallet } from '@meshsdk/core';
 import type { NextPage } from "next";
 import ProtectedRoute from '../../components/ProtectedRoute';
 import styles from '../../styles/Profile.module.css';
+import { processWalletTokens } from '../../services/tokenService';
 
 interface WalletInfo {
   id: string;
@@ -18,6 +19,10 @@ interface WalletInfo {
 
 interface WalletBalance {
   lovelace: string;
+  tokens?: Array<{
+    unit: string;
+    quantity: string;
+  }>;
 }
 
 const ProfileContent = () => {
@@ -28,6 +33,7 @@ const ProfileContent = () => {
   const [error, setError] = useState<string | null>(null);
   const [primaryWalletBalance, setPrimaryWalletBalance] = useState<WalletBalance | null>(null);
   const [isLoadingBalance, setIsLoadingBalance] = useState(false);
+  const [isProcessingTokens, setIsProcessingTokens] = useState(false);
 
   async function checkWallet() {
     if (!user?.wallets?.length) return;
@@ -38,8 +44,24 @@ const ProfileContent = () => {
     try {
       const wallet = await BrowserWallet.enable(primaryWallet.provider);
       const balance = await wallet.getBalance();
-      setPrimaryWalletBalance({ lovelace: balance[0].quantity });
-      console.log('Primary wallet balance:', balance);
+      
+      // Set the basic ADA balance
+      setPrimaryWalletBalance({ 
+        lovelace: balance[0].quantity,
+        tokens: balance.slice(1) // Store other tokens
+      });
+
+      // Process tokens in the background
+      setIsProcessingTokens(true);
+      try {
+        await processWalletTokens(balance);
+      } catch (error) {
+        console.error('Error processing tokens:', error);
+        // Don't show this error to user as it's background processing
+      } finally {
+        setIsProcessingTokens(false);
+      }
+
     } catch (error) {
       console.error('Error checking wallet:', error);
       setPrimaryWalletBalance(null);
@@ -93,9 +115,14 @@ const ProfileContent = () => {
     setError(null);
     try {
       await setPrimaryWallet(address);
+      // Refresh wallet balance after setting new primary
+      setIsLoadingBalance(true);
+      await checkWallet();
     } catch (error) {
       setError('Failed to set primary wallet');
       console.error('Failed to set primary wallet:', error);
+    } finally {
+      setIsLoadingBalance(false);
     }
   };
 
@@ -105,6 +132,10 @@ const ProfileContent = () => {
       minimumFractionDigits: 3,
       maximumFractionDigits: 3
     });
+  };
+
+  const getTokenCount = () => {
+    return primaryWalletBalance?.tokens?.length || 0;
   };
 
   if (!user) return null;
@@ -141,9 +172,14 @@ const ProfileContent = () => {
               {isLoadingBalance ? (
                 <span className={styles.loadingText}>Loading balance...</span>
               ) : primaryWalletBalance ? (
-                <span className={styles.balanceText}>
-                  {formatAda(primaryWalletBalance.lovelace)} ₳
-                </span>
+                <div className={styles.balanceInfo}>
+                  <span className={styles.balanceText}>
+                    {formatAda(primaryWalletBalance.lovelace)} ₳
+                  </span>
+                  <span className={styles.tokenCount}>
+                    {getTokenCount()} tokens {isProcessingTokens && '(processing...)'}
+                  </span>
+                </div>
               ) : (
                 <span className={styles.errorText}>Unable to load balance</span>
               )}
@@ -238,7 +274,7 @@ const ProfileContent = () => {
             <div className={styles.availableWalletsGrid}>
               {availableWallets.map((wallet) => {
                 const isConnected = user.wallets.some(w => 
-                  w.address.toLowerCase() === wallet.id.toLowerCase()
+                  w.provider.toLowerCase() === wallet.id.toLowerCase()
                 );
 
                 return (
