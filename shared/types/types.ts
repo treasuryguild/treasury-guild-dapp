@@ -2,6 +2,7 @@
 type WalletInfo = {
   address: string;
   isPrimary: boolean;
+  provider: string;
 }
 
 type UserProfile = {

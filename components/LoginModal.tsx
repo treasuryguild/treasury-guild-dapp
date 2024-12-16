@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaDiscord, FaGithub, FaWallet, FaChevronDown } from 'react-icons/fa';
-import { useAuth } from '../contexts/auth-context';
+import { useAuth } from '../shared/contexts/auth-context';
 import { BrowserWallet } from '@meshsdk/core';
 import styles from '../styles/Modal.module.css';
 

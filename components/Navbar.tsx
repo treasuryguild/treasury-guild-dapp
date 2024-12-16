@@ -3,10 +3,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { FaDiscord, FaGithub, FaWallet, FaBars, FaTimes, FaChevronDown } from 'react-icons/fa';
-import { useAuth } from '../contexts/auth-context';
+import { useAuth } from '../shared/contexts/auth-context';
 import styles from '../styles/Navbar.module.css';
 import LoginModal from '../components/LoginModal';
-import { User, AuthContextType } from '../types/auth';
+import { User, AuthContextType } from '../shared/types/auth';
 
 interface ConnectionStatusProps {
   user: User;
@@ -122,7 +122,7 @@ const Navbar = () => {
     <nav className={styles.navbar}>
       <div className={styles.container}>
         <Link href="/" className={styles.logo}>
-          YourApp
+          Treasury Guild
         </Link>
 
         <div className={styles.desktopMenu}>
